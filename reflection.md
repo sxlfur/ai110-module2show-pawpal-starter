@@ -49,35 +49,36 @@ Wire app.py to use pawpal_system.py instead of the other scheduler module.
 **a. Constraints and priorities**
 
  - **What constraints does your scheduler consider?**
-	 - **Owner available time:** a global daily time budget (`available_time_minutes`) that caps scheduled work.
-	 - **Task priority:** high/medium/low ranking to prefer important tasks when time is limited.
-	 - **Task duration:** how many minutes each task takes (used to fit tasks into the time budget and slots).
-	 - **Recurrence / frequency:** whether a task is once, daily, or weekly (affects whether it's due today).
-	 - **Time windows / preferences:** per-task `earliest_start_minute` / `latest_start_minute` to express preferred times of day.
-	 - **Completion status:** skip tasks already completed for the current recurrence.
-	 - **Pet context / fairness:** tasks are associated with pets; scheduler can filter by pet and optionally apply simple fairness rules.
+
+	 Owner available time: a global daily time budget (`available_time_minutes`) that caps scheduled work.
+	 Task priority: high/medium/low ranking to prefer important tasks when time is limited.
+	 Task duration: how many minutes each task takes (used to fit tasks into the time budget and slots).
+	 Recurrence / frequency: whether a task is once, daily, or weekly (affects whether it's due today).
+	 Time windows / preferences: per-task `earliest_start_minute` / `latest_start_minute` to express preferred times of day.
+	 Completion status: skip tasks already completed for the current recurrence.
+	 Pet context / fairness: tasks are associated with pets; scheduler can filter by pet and optionally apply simple fairness rules.
 
  - **How did you decide which constraints mattered most?**
-	 - **Owner available time first:** the owner's daily available time is the fundamental resource; nothing can be scheduled beyond it, so it governs feasibility.
-	 - **Priority second:** when time is scarce, honoring task priority preserves the most important care actions (meds, feeding) before lower-value items.
-	 - **Duration third:** shorter tasks are useful tiebreakers because they allow packing more useful actions into the same budget.
-	 - **Recurrence & windows next:** recurrence determines whether a task should appear today; windows are enforced when assigning concrete start times to keep the plan practical.
-	 - **Simplicity & UX last:** for an MVP I favored simple, explainable rules over complex optimization — this made the scheduler predictable and easier to explain in the `explanation` output.
+
+	 Owner available time first: the owner's daily available time is the fundamental resource; nothing can be scheduled beyond it, so it governs feasibility.
+	 riority second: when time is scarce, honoring task priority preserves the most important care actions (meds, feeding) before lower-value items.
+	 Duration third: shorter tasks are useful tiebreakers because they allow packing more useful actions into the same budget.
+	 Recurrence & windows next: recurrence determines whether a task should appear today; windows are enforced when assigning concrete start times to keep the plan practical.
+	 Simplicity & UX last: for an MVP I favored simple, explainable rules over complex optimization — this made the scheduler predictable and easier to explain in the `explanation` output.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+he scheduler performs a lightweight conflict detection that only flags exact fixed-start-time matches (tasks whose `earliest_start_minute == latest_start_minute`) rather than checking all overlapping durations.
+
+
 - Why is that tradeoff reasonable for this scenario?
  
-- **Tradeoff chosen:** The scheduler performs a lightweight conflict detection that only flags exact fixed-start-time matches (tasks whose `earliest_start_minute == latest_start_minute`) rather than checking all overlapping durations.
 
-- **Why this is reasonable:** This keeps the implementation simple and fast and provides a clear, actionable warning to the user (for example, two medication events scheduled at the exact same time). It avoids complex interval data structures and reduces the chance of noisy or confusing diagnostics in the MVP.
+Why this is reasonable: This keeps the implementation simple and fast and provides a clear, actionable warning to the user (for example, two medication events scheduled at the exact same time). It avoids complex interval data structures and reduces the chance of noisy or confusing diagnostics in the MVP.
 
-- **Downside:** The current strategy can miss conflicts where tasks overlap but do not have identical fixed start times (e.g., a 30-minute walk starting at minute 10 and a 20-minute grooming starting at minute 20). Those overlapping durations will not produce a warning under this approach.
 
-- **Decision / next steps:** I kept the lightweight exact-match strategy for readability and maintainability. If users need stricter conflict detection, the scheduler can be extended to perform full interval-overlap checks (or use an interval-tree) and to offer automatic resolution suggestions.
-
-- **AI-assisted review of `generate_schedule()` simplification:** I shared the `generate_schedule()` implementation with an AI coding assistant and asked how to simplify it. The assistant suggested using classic interval-scheduling optimizations (e.g., sort-by-end-time or a weighted interval selection) to improve performance and optimality. While these approaches can be more efficient or optimal in certain formal settings, they assume a simpler model (no per-task earliest/latest windows or per-task priorities expressed as weights). I chose to keep the current, explicit greedy slotting approach because it is clearer to read, easier to extend with per-task windows and recurring logic, and produces human-readable reasoning in the `explanation` output.
 ---
 ## 3. AI Collaboration
 
@@ -98,12 +99,30 @@ Wire app.py to use pawpal_system.py instead of the other scheduler module.
 **a. What you tested**
 
 - What behaviors did you test?
+
+  I tested core scheduling behaviors in `pawpal_system.py`, including whether recurring tasks are correctly marked due or skipped by `Task.is_due()`, whether `Pet.complete_task()` correctly completes a task and creates the next recurring instance, and whether `Scheduler.generate_schedule()` assigns tasks into valid time slots while respecting owner availability and per-task windows.
+
+  I also verified that `Scheduler.sort_by_time()` orders scheduled tasks by their assigned `start_minute`, and that `Scheduler.filter_tasks()` can filter tasks by pet and completion status.
+
 - Why were these tests important?
+
+  These tests were important because they validate the core scheduler invariants: that due tasks are selected correctly, recurring tasks continue to reappear as expected, and the generated plan respects both the owner’s available time and each task’s timing constraints.
+
+  By checking ordering and filtering behavior explicitly, the tests also make the scheduling engine more reliable and easier to reason about when the Streamlit UI consumes it.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+
+  I am moderately confident in the scheduler’s core behavior. It correctly orders and filters tasks, respects owner availability and task time windows, and handles recurring task due logic, but it remains a greedy heuristic that may miss some non-fixed overlap conflicts.
+
 - What edge cases would you test next if you had more time?
+
+  I would test:
+  - overlapping tasks with partial window intersections,
+  - tasks that exactly fill the remaining available minutes,
+  - back-to-back placement of tasks with adjacent windows,
+  - and recurring task behavior across midnight or week boundaries.
 
 ---
 

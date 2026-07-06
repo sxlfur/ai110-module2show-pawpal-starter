@@ -66,19 +66,36 @@ Tasks rejected: 1
 
 ## 🧪 Testing PawPal+
 
+Run the automated test suite to verify the core scheduling system.
+
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
 
-Sample test output:
+The current tests cover:
 
+- the `Task` recurrence and due-ness logic in `Task.is_due()`
+- recurring task completion and auto-clone behavior in `Pet.complete_task()`
+- schedule generation, ordering, and filtering behavior in `Scheduler.generate_schedule()`
+- ordering by start time in `Scheduler.sort_by_time()` and filtering by pet/completion in `Scheduler.filter_tasks()`
+
+Sample successful test output:
+
+```bash
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/kevinshan/Desktop/CodePath/Github/ai110-module2show-pawpal-starter
+plugins: anyio-4.13.0
+collected 2 items                                                               
+
+tests/test_pawpal.py ..                                                  [100%]
+
+============================== 2 passed in 0.01s ==============================
 ```
-# Paste your pytest output here
-```
+
+Confidence Level: ★★★☆☆
+
+This reflects the current correctness of the covered behaviors while acknowledging that the scheduler is still a simple greedy implementation and could be extended with richer overlap/conflict handling.
 
 ## 📐 Smarter Scheduling
 
