@@ -44,14 +44,24 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
+Sample terminal run of `main.py` (this repository's test harness) producing a generated daily plan:
 
 ```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
+Today's Schedule
+------------------
+1. Feed (Mochi) — 5m — high
+2. Morning walk (Rex) — 30m — high
+3. Morning play (Mochi) — 20m — medium
+
+Rejected tasks (didn't fit):
+- Grooming (Rex) — 45m
+
+Reasoning:
+Owner 'Alex' available time: 90 minutes
+Total scheduled time: 55 minutes
+Tasks considered: 4
+Tasks accepted: 3
+Tasks rejected: 1
 ```
 
 ## 🧪 Testing PawPal+
@@ -72,14 +82,16 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+This project implements a lightweight scheduling engine with several practical features. Below is a concise mapping from feature to the method(s) that implement it.
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Sorting behavior | `Scheduler.sort_by_time()` and internal sorting in `Scheduler.generate_schedule()` | Sorts instances by priority (high &gt; medium &gt; low), then earliest allowed start, then shortest duration as tiebreaker.
+| Filtering behavior | `Scheduler.filter_tasks()`, `Owner.all_tasks()` | Filter by pet name(s) and completion status; `Owner.all_tasks()` supplies due tasks (uses `Task.is_due()`).
+| Conflict detection logic | `Scheduler.generate_schedule()` (lightweight fixed-window warnings) | Emits warnings when multiple fixed-start tasks (where `earliest == latest`) overlap; used to notify immediate scheduling collisions.
+| Recurring task logic | `Task.is_due()`, `Pet.complete_task()`, `Pet.get_pending_tasks()` | `is_due()` evaluates daily/weekly recurrence; `complete_task()` auto-clones the next recurrence instance when a recurring task is completed.
+
+These methods and behaviors form the core of the scheduling approach used by the Streamlit UI (`app.py`) and the terminal demo (`main.py`).
 
 ## 📸 Demo Walkthrough
 
