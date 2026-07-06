@@ -97,12 +97,19 @@ else:
             selected_pet.add_task(task)
             st.success(f"Added task '{task_title}' to {selected_pet.name}")
 
-    # display current pets and their tasks
+    # display current pets and their tasks using scheduler filtering logic
+    scheduler = Scheduler()
     st.write("Current pets and tasks:")
     rows = []
     for p in owner.pets:
         for t in p.tasks:
-            rows.append({"pet": p.name, "task": t.title, "duration_minutes": t.duration_minutes, "priority": t.priority.value if hasattr(t.priority, 'value') else str(t.priority)})
+            rows.append({
+                "pet": p.name,
+                "task": t.title,
+                "duration_minutes": t.duration_minutes,
+                "priority": t.priority.value if hasattr(t.priority, 'value') else str(t.priority),
+                "completed": t.completed,
+            })
     if rows:
         st.table(rows)
     else:
@@ -111,39 +118,31 @@ else:
 st.divider()
 
 st.subheader("Build Schedule")
-st.caption("This button should call your scheduling logic once you implement it.")
+st.caption("Generate a daily plan based on the current owner, pets, and tasks.")
 
 if st.button("Generate schedule"):
-    # ensure owner exists in session and is the correct type
     owner = st.session_state.get("owner")
-    if not isinstance(owner, Owner) or owner.name != owner_name or owner.available_time_minutes != int(available_time):
+    if not isinstance(owner, Owner):
         owner = Owner(name=owner_name, available_time_minutes=int(available_time))
         st.session_state["owner"] = owner
 
-    # build a Pet from inputs and attach tasks from session_state
-    pet = Pet(name=pet_name, species=species)
-
-    for t in st.session_state.tasks:
-        duration_val = t.get("duration_minutes") or t.get("duration") or 0
-        task = Task(title=t.get("title", "unnamed"), duration_minutes=int(duration_val), priority=t.get("priority", "medium"))
-        pet.add_task(task)
-
-    # replace any existing pet with same name
-    owner.remove_pet(pet.name)
-    owner.add_pet(pet)
-
     scheduler = Scheduler()
     result = scheduler.generate_schedule(owner)
+    accepted = scheduler.sort_by_time(result.get("accepted", []))
 
-    st.write("### Scheduled tasks")
-    if result["accepted"]:
-        st.table(result["accepted"])
+    if accepted:
+        st.success("Scheduled tasks")
+        st.table(accepted)
     else:
-        st.info("No tasks fit in the available time.")
+        st.warning("No tasks fit in the available time.")
 
-    if result["rejected"]:
+    if result.get("warnings"):
+        for warning in result["warnings"]:
+            st.warning(warning)
+
+    if result.get("rejected"):
         with st.expander("Rejected tasks (didn't fit)"):
             st.table(result["rejected"])
 
     with st.expander("Reasoning"):
-        st.text(result["explanation"])
+        st.text(result.get("explanation", "No explanation available."))

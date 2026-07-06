@@ -85,12 +85,22 @@ Why this is reasonable: This keeps the implementation simple and fast and provid
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+
+  I used AI to help shape the system design and validate implementation details. It assisted with selecting the right class responsibilities, refining scheduler behavior, and suggesting ways to make the output and README clearer.
+
 - What kinds of prompts or questions were most helpful?
+
+  The most helpful prompts were those that asked the AI to compare tradeoffs, explain algorithmic choices, and suggest concrete method names or UI wiring strategies.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+
+  I chose not to adopt a full interval-overlap conflict detection approach because it would overcomplicate the MVP and stray from the current time-boxed implementation goals.
+
 - How did you evaluate or verify what the AI suggested?
+
+  I evaluated suggestions against the actual code, verifying behavior with `main.py` runs and the existing unit tests. If a suggestion introduced complexity without clear benefit, I simplified it to keep the scheduler understandable and maintainable.
 
 ---
 
@@ -119,10 +129,10 @@ Why this is reasonable: This keeps the implementation simple and fast and provid
 - What edge cases would you test next if you had more time?
 
   I would test:
-  - overlapping tasks with partial window intersections,
-  - tasks that exactly fill the remaining available minutes,
-  - back-to-back placement of tasks with adjacent windows,
-  - and recurring task behavior across midnight or week boundaries.
+  overlapping tasks with partial window intersections,
+  tasks that exactly fill the remaining available minutes,
+  back-to-back placement of tasks with adjacent windows,
+  and recurring task behavior across midnight or week boundaries.
 
 ---
 
@@ -132,10 +142,16 @@ Why this is reasonable: This keeps the implementation simple and fast and provid
 
 - What part of this project are you most satisfied with?
 
+  I am most satisfied with turning the scheduling idea into a working end-to-end system. The domain model in `pawpal_system.py` now matches the Streamlit UI, the scheduler produces concrete start times, and the system includes both a demo harness and automated tests.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+  I would improve conflict detection by upgrading it from exact fixed-start warnings to full interval overlap checks. I would also make the UI stateful so task updates and multiple pets can be managed directly in Streamlit instead of relying on simplified demo inputs.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+  I learned that AI can accelerate design and implementation, but it works best when paired with a clear scope and critical judgment. I used AI suggestions selectively, validating each against the actual code and project goals before adopting it.

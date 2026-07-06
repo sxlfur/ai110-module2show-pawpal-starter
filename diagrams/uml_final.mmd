@@ -1,0 +1,51 @@
+classDiagram
+    class Owner {
+        +String name
+        +int available_time_minutes
+        +List~Pet~ pets
+        +add_pet(pet: Pet)
+        +remove_pet(name: String)
+        +all_tasks(include_completed: bool = False, reference: datetime = None) List~Task,Pet~
+        +to_dict() Dict
+    }
+
+    class Pet {
+        +String name
+        +String species
+        +List~Task~ tasks
+        +add_task(task: Task)
+        +remove_task(title: String)
+        +to_dict() Dict
+        +get_pending_tasks(reference: datetime = None) List~Task~
+        +find_task_by_id(task_id: String) Task
+        +update_task(task_id: String, **changes) bool
+        +complete_task(task_id: String, at: datetime = None) bool
+    }
+
+    class Task {
+        +String title
+        +int duration_minutes
+        +Priority priority
+        +String id
+        +String notes
+        +String created_at
+        +String frequency
+        +int earliest_start_minute
+        +int latest_start_minute
+        +bool completed
+        +String last_completed_at
+        +to_dict() Dict
+        +mark_completed(at: datetime = None)
+        +is_due(reference: datetime = None) bool
+    }
+
+    class Scheduler {
+        +generate_schedule(owner: Owner) Dict
+        +sort_by_time(tasks: List~Dict~) List~Dict~
+        +filter_tasks(owner: Owner, pet_names: List~String~ = None, completed: bool = None, reference: datetime = None) List~Tuple~Task,Pet~
+    }
+
+    Owner "1" *-- "*" Pet : owns
+    Pet "1" *-- "*" Task : requires
+    Scheduler --> Owner : reads constraints from
+    Scheduler --> Pet : reads tasks from

@@ -42,11 +42,37 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
-## 🖥️ Sample Output
+## 🖥️ Demo Walkthrough
 
-Sample terminal run of `main.py` (this repository's test harness) producing a generated daily plan:
+Use the terminal demo and the Streamlit app together to validate the PawPal+ workflow.
 
-```
+### Main UI features
+
+- `Owner` profile input with available time budget.
+- Add pet profiles with a name and species.
+- Create care tasks for pets with duration and priority.
+- Generate a daily schedule in one click.
+- View accepted tasks, rejected tasks, and conflict warnings inline.
+
+### Example workflow
+
+1. Enter owner details and available time.
+2. Add a pet profile such as `Mochi` or `Rex`.
+3. Add one or more tasks for the pet, including task name, duration, and priority.
+4. Click **Generate schedule**.
+5. Review the accepted schedule, rejected tasks, and any warnings about conflicting fixed-time tasks.
+
+### Key scheduler behaviors shown
+
+- Sorting by priority and time windows (`Scheduler.generate_schedule()`).
+- Ordering accepted tasks by `start_minute` via `Scheduler.sort_by_time()`.
+- Filtering tasks by due-ness and completion state (`Owner.all_tasks()` and `Scheduler.filter_tasks()`).
+- Conflict warnings for fixed-start overlapping tasks.
+- Recurring task support for daily/weekly tasks and completion-driven reactivation.
+
+### Sample CLI output
+
+```bash
 Today's Schedule
 ------------------
 1. Feed (Mochi) — 5m — high
@@ -64,6 +90,16 @@ Tasks accepted: 3
 Tasks rejected: 1
 ```
 
+## Features
+
+The app implements the following core capabilities from `pawpal_system.py`, surfaced in `app.py` and validated by `main.py`:
+
+- **Sorting by time and priority** — tasks are prioritized by `high`, `medium`, and `low`, then by earliest allowable start time and duration.
+- **Conflict warnings** — the scheduler detects fixed-window overlaps and warns the user if two tasks require the same exact start time.
+- **Recurring tasks** — `Task.is_due()` and `Pet.complete_task()` support daily and weekly recurrence.
+- **Task filtering** — the system filters due tasks and can optionally filter by pet or completion state.
+- **Schedule generation** — greedy slotting within the owner's available time approves tasks that fit and rejects the rest with reasoning.
+
 ## 🧪 Testing PawPal+
 
 Run the automated test suite to verify the core scheduling system.
@@ -74,10 +110,10 @@ python -m pytest
 
 The current tests cover:
 
-- the `Task` recurrence and due-ness logic in `Task.is_due()`
-- recurring task completion and auto-clone behavior in `Pet.complete_task()`
-- schedule generation, ordering, and filtering behavior in `Scheduler.generate_schedule()`
-- ordering by start time in `Scheduler.sort_by_time()` and filtering by pet/completion in `Scheduler.filter_tasks()`
+- `Task.is_due()` recurrence and due-ness logic
+- `Pet.complete_task()` recurring task completion and clone behavior
+- `Scheduler.generate_schedule()` schedule generation, ordering, and filtering
+- `Scheduler.sort_by_time()` acceptance ordering and `Scheduler.filter_tasks()` task filtering by pet/completion
 
 Sample successful test output:
 
@@ -97,27 +133,17 @@ Confidence Level: ★★★☆☆
 
 This reflects the current correctness of the covered behaviors while acknowledging that the scheduler is still a simple greedy implementation and could be extended with richer overlap/conflict handling.
 
-## 📐 Smarter Scheduling
+## Architecture and Files
 
-This project implements a lightweight scheduling engine with several practical features. Below is a concise mapping from feature to the method(s) that implement it.
+Key implementation files:
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Sorting behavior | `Scheduler.sort_by_time()` and internal sorting in `Scheduler.generate_schedule()` | Sorts instances by priority (high &gt; medium &gt; low), then earliest allowed start, then shortest duration as tiebreaker.
-| Filtering behavior | `Scheduler.filter_tasks()`, `Owner.all_tasks()` | Filter by pet name(s) and completion status; `Owner.all_tasks()` supplies due tasks (uses `Task.is_due()`).
-| Conflict detection logic | `Scheduler.generate_schedule()` (lightweight fixed-window warnings) | Emits warnings when multiple fixed-start tasks (where `earliest == latest`) overlap; used to notify immediate scheduling collisions.
-| Recurring task logic | `Task.is_due()`, `Pet.complete_task()`, `Pet.get_pending_tasks()` | `is_due()` evaluates daily/weekly recurrence; `complete_task()` auto-clones the next recurrence instance when a recurring task is completed.
+- `pawpal_system.py` — core domain model and scheduling logic.
+- `app.py` — Streamlit UI wiring and schedule display.
+- `main.py` — terminal demo harness for generating sample schedules.
+- `tests/test_pawpal.py` — automated unit tests.
+- `diagrams/uml_final.mmd` — final Mermaid UML source.
 
-These methods and behaviors form the core of the scheduling approach used by the Streamlit UI (`app.py`) and the terminal demo (`main.py`).
+## System Architecture
 
-## 📸 Demo Walkthrough
+![PawPal+ UML diagram](diagrams/uml_final.png)
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
-
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
-
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
